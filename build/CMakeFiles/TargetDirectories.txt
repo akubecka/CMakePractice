@@ -1,0 +1,3 @@
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/build/CMakeFiles/Tutorial.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/build/CMakeFiles/edit_cache.dir
