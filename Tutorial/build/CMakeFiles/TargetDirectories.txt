@@ -1,0 +1,8 @@
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/say-hello/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/say-hello/CMakeFiles/say-hello.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/say-hello/CMakeFiles/edit_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/hello-exe/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/hello-exe/CMakeFiles/Tutorial.dir
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/hello-exe/CMakeFiles/edit_cache.dir

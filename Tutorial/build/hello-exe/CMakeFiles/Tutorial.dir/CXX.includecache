@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../say-hello/src/say-hello/hello.hpp
+
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/hello-exe/main.cpp
+iostream
+-
+say-hello/hello.hpp
+/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/hello-exe/say-hello/hello.hpp
+
