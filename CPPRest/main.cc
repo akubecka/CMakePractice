@@ -38,7 +38,7 @@ void handle_get1(const http_request& request)
 
     request.reply(response);
 }
-void handle_get2(int num, http_request message)
+void handle_get2(http_request message)
 {
    cout<<"get1\n";
    char _id[20];
