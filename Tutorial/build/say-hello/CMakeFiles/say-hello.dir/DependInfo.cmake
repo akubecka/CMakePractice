@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/say-hello/src/say-hello/hello.cpp" "/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/say-hello/CMakeFiles/say-hello.dir/src/say-hello/hello.cpp.o"
+  "/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/say-hello/src/say-hello/hello.cpp" "/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/build/say-hello/CMakeFiles/say-hello.dir/src/say-hello/hello.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

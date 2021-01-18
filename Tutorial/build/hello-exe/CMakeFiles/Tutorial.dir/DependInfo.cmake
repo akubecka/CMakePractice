@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/hello-exe/main.cpp" "/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/hello-exe/CMakeFiles/Tutorial.dir/main.cpp.o"
+  "/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/hello-exe/main.cpp" "/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/build/hello-exe/CMakeFiles/Tutorial.dir/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -20,7 +20,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/build/say-hello/CMakeFiles/say-hello.dir/DependInfo.cmake"
+  "/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/build/say-hello/CMakeFiles/say-hello.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.

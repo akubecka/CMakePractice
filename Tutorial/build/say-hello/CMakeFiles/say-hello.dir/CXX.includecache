@@ -6,3 +6,11 @@
 
 #IncludeRegexTransform: 
 
+/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/say-hello/src/say-hello/hello.cpp
+hello.hpp
+/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/say-hello/src/say-hello/hello.hpp
+iostream
+-
+
+/mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/say-hello/src/say-hello/hello.hpp
+

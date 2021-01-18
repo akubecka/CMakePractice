@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/say-hello
+# Install script for directory: /mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/say-hello
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/kubec/Documents/CMakePractice/CPPRest/main.cc
+cpprest/http_listener.h
+-
+iostream
+-
+rapidjson/writer.h
+-
+rapidjson/stringbuffer.h
+-
+

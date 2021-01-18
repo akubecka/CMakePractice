@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/kubec/Desktop/School/Sem8/SeniorD/CMakePractice/Tutorial/hello-exe
+# Install script for directory: /mnt/c/Users/kubec/Documents/CMakePractice/Tutorial/hello-exe
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
