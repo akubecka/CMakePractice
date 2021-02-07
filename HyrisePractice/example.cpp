@@ -6,16 +6,17 @@ using namespace std;
 using namespace hsql;
 
 
-bool dropTable(const SQLParserResult sql){
+bool dropTable(SQLParserResult *sql){
+  cout<<sql->getStatement(0);
   return true;
 }
-bool createTable(SQLParserResult sql){
+bool createTable(SQLParserResult *sql){
   return true;
 }
-bool selectStatement(SQLParserResult sql){
+bool selectStatement(SQLParserResult *sql){
   return true;
 }
-bool insertStatement(SQLParserResult sql){
+bool insertStatement(SQLParserResult *sql){
   return true;
 }
 
