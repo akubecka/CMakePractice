@@ -179,36 +179,71 @@ bool parseString(string query){
   if (result.isValid()) {
     printf("Parsed successfully!\n");
     printf("Number of statements: %lu\n", result.size());
-
     for (auto i = 0u; i < result.size(); ++i) {
       // Print a statement summary.
       //printStatementInfo(result.getStatement(i));
-      int typ = result.getStatement(i)->type();
-      switch(typ){
-        case(1): //Select
+      //int typ = result.getStatement(i)->type();
+
+      InsertStatement* insState;//The different statement types for grabbing more info
+      CreateStatement* creState;
+      SelectStatement* selState;
+      ImportStatement* impState;
+      ExportStatement* expState;
+      TransactionStatement* tranState;//The different statement types for grabbing more info
+
+      vector<string> col_names;
+      vector<string> data_vec;
+      switch(result.getStatement(i)->type()){
+        case(kStmtUpdate):
+          cout<<"UPDATE"<<endl;
+          break;
+        case(kStmtDrop): //DROP
+          cout<<"DROP"<<endl;
+          dropTable(query);
+          break;
+        case(kStmtCreate): //Create (Big problems here with datatypes)
+          cout<<"CREATE"<<endl;
+          creState = (CreateStatement*) result.getStatement(i);
+          printCreateStatementInfo(creState, 0);
+          for(char* col_name : *creState->columns){
+            cout<<col_name<<endl;
+          } 
+          insertStatement(query);
+          createTable(query);
+          break;
+        case(kStmtPrepare):
+          cout<<"PREPARE"<<endl;
+          break;
+        case kStmtDelete:
+          cout<<"DELETE"<<endl;
+          break;
+        case kStmtSelect: //Select
           cout<<"SELECT"<<endl;
           selectStatement(query);
           break;
-        case(2):
-          cout<<2<<endl;
-          break;
-        case(3): //Insert
+        case kStmtInsert: //Insert
           cout<<"INSERT"<<endl;
+          insState = (InsertStatement*) result.getStatement(i);
+          printInsertStatementInfo(insState, 0);
+          for(char* col_name : *insState->columns){
+            cout<<col_name<<endl;
+          } 
           insertStatement(query);
           break;
-        case(4):
-          cout<<4<<endl;
+        case(kStmtExecute):
+          cout<<"EXECUTE"<<endl;
           break;
-        case(5):
-          cout<<5<<endl;
+        case(kStmtRename):
+          cout<<"RENAME"<<endl;
           break;
-        case(6): //Create (Big problems here with datatypes)
-          cout<<"CREATE"<<endl;
-          createTable(query);
+        case(kStmtAlter):
+          cout<<"ALTER"<<endl;
           break;
-        case(7): //DROP
-          cout<<"DROP"<<endl;
-          dropTable(query);
+        case(kStmtShow):
+          cout<<"SHOW"<<endl;
+          break;
+        case(kStmtTransaction):
+          cout<<"TRANSACTION"<<endl;
           break;
         default:
           break;
