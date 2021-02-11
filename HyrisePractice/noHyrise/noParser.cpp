@@ -1,6 +1,16 @@
 #include "hsql/SQLParser.h"
 #include "hsql/util/sqlhelper.h"
 #include <iostream>
+#include <string.h>
+#include <sstream>
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h> 
+#include <bits/stdc++.h>
+#include <cmath>
+#include <vector>
+#include <random>
+#include <chrono>
 
 using namespace std;
 using namespace hsql;
@@ -13,6 +23,7 @@ using namespace hsql;
  */ 
 string dropTable(string sql){
   cout<<sql;//Change to syslog
+  //Remove stuff from secret dbs and hashes
   return sql;
 }
 
@@ -40,32 +51,6 @@ string selectStatement(string sql){
 }
 
 /**
- * insertStatement function
- * 
- * @param sql the insert sql statement
- * @return the new insert statement
- */ 
-string insertStatement(string sql){
-  string newSql;
-  int direction = 0; //Read from secret db (0 = left, 1 = right)
-  int insertLocation = 2; //Read from secret db
-  int type = 0; //Read from secret db (0 = integer, 1 = decimal, 2 = string)
-  
-  //long long num = 1;
-  //float dec = 1.0;
-  //string str = "insert here";
-  string val = "100";
-  if(type==0){
-    insertInt(val, direction, insertLocation);
-  }else if(type==1){
-    insertDec(val, direction, insertLocation);
-  }else if(type==2){
-    insertString(val, direction, insertLocation);
-  }
-  return newSql;
-}
-
-/**
  * insertInt function helps insertStatement function with integers
  * 
  * @param val the integer value in string form
@@ -81,18 +66,18 @@ string insertInt(string val, int direction, int insertLocation){
             newVal += val[i];
             if(direction){
                 if (i == insertLocation-1) {
-                    string s1 = to_string(rnd());
+                    string s1 = to_string(1);
                     newVal += s1;
                 }
             }else{
                 if (i == len-insertLocation) {
-                    string s1 = to_string(rnd());
+                    string s1 = to_string(1);
                     newVal += s1;
                 }
             }
         }
     } else {//Number is shorter than designated watermark index, so stick it at the end
-        newVal = val+to_string(rnd());
+        newVal = val+to_string(1);
     }
   return newVal;
 }
@@ -105,22 +90,19 @@ string insertInt(string val, int direction, int insertLocation){
  * @param insertLocation how far from the left/right
  * @return the new value
  */ 
-string insertDec(string val, int direction, int insertLocation){
-  string newVal;
+string insertDec(double val, int direction, int insertLocation){
   double ret = 0;
     if(direction){
         double leftPart = (int)val / (int)pow(10, insertLocation);
         ret += leftPart * pow(10, insertLocation + 1);
-        ret += rnd() * pow(10, insertLocation);
+        ret += 1 * pow(10, insertLocation);
         ret += fmod(val, pow(10, insertLocation));        
     }else{
         double rightPart = fmod(val, pow(10, -1 * insertLocation));
         double leftPart = val - rightPart;
-        ret += leftPart + rnd() * pow(10, -1 * (insertLocation + 1)) + rightPart * pow(10, -1);
+        ret += leftPart + 1 * pow(10, -1 * (insertLocation + 1)) + rightPart * pow(10, -1);
     }
-
-    return ret;
-  return newVal;
+  return to_string(ret);
 }
 
 /**
@@ -136,25 +118,51 @@ string insertString(string val, int direction, int insertLocation){
     int len = val.length();
     if (len >= insertLocation) {
         for (int i = 0; i < len; i++) {
-            newVal += s[i];
+            newVal += val[i];
             if(direction){
                 if (i == insertLocation-1) {
-                    char s1 = char('a'-1 + rnd());
+                    char s1 = char('a'-1 + 1);
                     newVal += s1;
                 }
             }else{
                 if (i == len-insertLocation) {
-                    char s1 = char('a'-1 + rnd());
+                    char s1 = char('a'-1 + 1);
                     newVal += s1;
                 }
             }
         }
     } else {//Number is shorter than designated watermark index, so stick it at the end
-        newVal = val+to_string(rnd());
+        newVal = val+to_string(1);
     }
   return newVal;
 }
 
+/**
+ * insertStatement function
+ * 
+ * @param sql the insert sql statement
+ * @return the new insert statement
+ */ 
+string insertStatement(string sql){
+  string newSql;
+  int direction = 0; //Read from secret db (0 = left, 1 = right)
+  int insertLocation = 2; //Read from secret db
+  int type = 1; //Read from secret db (0 = integer, 1 = decimal, 2 = string)
+  
+  //long long num = 1;
+  //float dec = 1.0;
+  //string str = "insert here";
+  string val = "100";
+  if(type==0){
+    cout<<"Int: "<<insertInt(val, direction, insertLocation)<<endl;
+  }else if(type==1){
+    double test = 1000;
+    cout<<"Double: "<<insertDec(test, direction, insertLocation)<<endl;
+  }else if(type==2){
+    cout<<"String: "<<insertString(val, direction, insertLocation)<<endl;
+  }
+  return newSql;
+}
 
 /**
  * parseString function
