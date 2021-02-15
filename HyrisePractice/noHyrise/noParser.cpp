@@ -53,9 +53,6 @@ bool selectStatement(const SQLStatement* sql){
 
 bool getCreateInfo(CreateStatement* stmt){
   printCreateStatementInfo(stmt, 0);
-  for(char* col_name : *stmt->viewColumns){
-    cout<<col_name<<endl;
-  } 
   return true;
 }
 
@@ -276,7 +273,9 @@ string getInfo(const SQLStatement* sql){
           break;
         case kStmtSelect: //Select
           cout<<"SELECT"<<endl;
-          selectStatement(sql);
+          selState = (SelectStatement*) sql;
+          //return getSelectInfo(selState);
+          //selectStatement(sql);
           break;
         case kStmtInsert: //Insert
           cout<<"INSERT"<<endl;
@@ -305,18 +304,35 @@ string getInfo(const SQLStatement* sql){
 }
 
 /**
+ * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
+ * Returns the columns, types, and values if required
+ * 
+ * @param query the sql statement in question
+ * @return Array of cols, types, values
+ */
+string getInfoString(string query){
+  string newQuery = query;
+  if(query.substr(0, 6)=="CREATE"){
+    cout<<"CREATE"<<endl;
+  }else{
+    return "";
+  }
+  return newQuery;
+}
+/**
  * parseString function
  * 
  * @param query the entire sql statement
  * @return the new entire sql statement
  */ 
-bool parseString(string query){
+bool parseString(string query){//Maybe check every semicolon then go from there
   // parse a given query
+
   SQLParserResult result;
   SQLParser::parse(query, &result);
 
   string newQuery; //THIS IS WHAT WE RETURN TO THE SHIM
-
+  
   // check whether the parsing was successful
   if (result.isValid()) {
     printf("Parsed successfully!\n");
@@ -324,14 +340,45 @@ bool parseString(string query){
     for (auto i = 0u; i < result.size(); ++i) {
       newQuery+=getInfo(result.getStatement(i));//Send new sql string into vector one by one
     }
+  }else {//The parser does not recognize something so we need to go one by one
+    int maxLen = query.size()-1;
+    if(query[maxLen]!=';'){//If the string doesn't end with ; then it is bad
+      cout<<"Error: BAD SQL STRING."<<endl;
+      return false;
+    }
+    printf("Error, checking one by one now.\n");
+    int start = 0;
+    int end = query.find(';')+1;
+    string stmt;
+    while(query!=""){
+      stmt = query.substr(start, end);
+      query = query.substr(end, maxLen);
+      cout<<"Manually Parsing: "<<stmt<<endl;
+
+      //Try to parse normally
+      SQLParserResult result;
+      SQLParser::parse(stmt, &result);
+      if (result.isValid()) {
+        printf("Parsed successfully!\n");
+        printf("Number of statements: %lu\n", result.size());
+        for (auto i = 0u; i < result.size(); ++i) {
+          newQuery+=getInfo(result.getStatement(i));//Send new sql string into vector one by one
+        }
+      }else{
+        cout<<"The statement: "<<stmt<<" is being manually parsed.\n";
+        string temp = getInfoString(stmt);
+        if(temp==""){//Return "" if the query is unparseable
+          cout<<"ERROR: "<<stmt<<" is not a valid statement."<<endl;
+          return false;
+        }
+        newQuery+=getInfoString(stmt);//Send this new sql string into vector
+      }
+
+      end = query.find(';')+1;
+      maxLen=query.size();
+    }
     cout<<newQuery<<endl;
-  }else {
-    fprintf(stderr, "Given string is not a valid SQL query.\n");
-    fprintf(stderr, "%s (L%d:%d)\n",
-            result.errorMsg(),
-            result.errorLine(),
-            result.errorColumn());
-    return false;
+    return true;
   }
   return true;
 }
