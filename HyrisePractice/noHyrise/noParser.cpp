@@ -236,6 +236,69 @@ string getInsertInfo(InsertStatement* stmt){
 }
 //END OF INSERT STUFF ----------------------------------------------------------------------------------------------------
 
+string getSelectInfo(SelectStatement* stmt){
+  vector<string> fieldVec;//Vector of the field names
+  vector<string> sourceVec;//Vector of the source names
+
+  for(Expr* val : *stmt->selectList){//Get values, prepare them for insertion
+    switch (val->type) {//Check type of value we are inserting into
+      case kExprLiteralFloat://Float
+        fvalue = val->fval;
+        fieldVec.push_back(to_string(fvalue));
+        break;
+      case kExprLiteralInt://Integer
+        ivalue = val->ival;
+        fieldVec.push_back(to_string(ivalue));
+        break;
+      case kExprLiteralString://String
+        svalue = val->name;
+        fieldVec.push_back(svalue);
+        break;
+      case kExprStar:
+        fieldVec.push_back("*");
+        break;
+      case kExprColumnRef:
+        inprint(expr->name, numIndent);
+        if(expr->table) {
+          inprint("Table:", numIndent+1);
+          inprint(expr->table, numIndent+2);
+        }
+        break;
+      case kExprFunctionRef:
+        inprint(expr->name, numIndent);
+        for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
+        break;
+      case kExprExtract:
+        inprint(expr->name, numIndent);
+        inprint(expr->datetimeField, numIndent + 1);
+        printExpression(expr->expr, numIndent + 1);
+        break;
+      case kExprCast:
+        inprint(expr->name, numIndent);
+        inprint(expr->columnType, numIndent + 1);
+        printExpression(expr->expr, numIndent + 1);
+        break;
+      case kExprOperator:
+        printOperatorExpression(expr, numIndent);
+        break;
+      case kExprSelect:
+        printSelectStatementInfo(expr->select, numIndent);
+        break;
+      case kExprParameter:
+        inprint(expr->ival, numIndent);
+        break;
+      case kExprArray:
+        for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
+        break;
+      case kExprArrayIndex:
+        printExpression(expr->expr, numIndent + 1);
+        inprint(expr->ival, numIndent);
+        break;
+      default:
+          break;
+      }
+  }
+}
 
 /**
  * getInfo function
@@ -262,8 +325,7 @@ string getInfo(const SQLStatement* sql){
           break;
         case(kStmtCreate): //Create (Big problems here with datatypes)
           cout<<"CREATE"<<endl;
-          creState = (CreateStatement*) sql;
-          getCreateInfo(creState);
+          return "NO";//return "NO" to show it is a create and can't be parsed by hyrise
           break;
         case(kStmtPrepare): //Prepare
           cout<<"PREPARE"<<endl;
@@ -274,7 +336,8 @@ string getInfo(const SQLStatement* sql){
         case kStmtSelect: //Select
           cout<<"SELECT"<<endl;
           selState = (SelectStatement*) sql;
-          //return getSelectInfo(selState);
+          printSelectStatementInfo(selState, 0);
+          return getSelectInfo(selState);
           //selectStatement(sql);
           break;
         case kStmtInsert: //Insert
@@ -334,7 +397,7 @@ bool parseString(string query){//Maybe check every semicolon then go from there
   string newQuery; //THIS IS WHAT WE RETURN TO THE SHIM
   
   // check whether the parsing was successful
-  if (result.isValid()) {
+  if (false) {//result.isValid() put this back maybe
     printf("Parsed successfully!\n");
     printf("Number of statements: %lu\n", result.size());
     for (auto i = 0u; i < result.size(); ++i) {
@@ -355,14 +418,19 @@ bool parseString(string query){//Maybe check every semicolon then go from there
       query = query.substr(end, maxLen);
       cout<<"Manually Parsing: "<<stmt<<endl;
 
-      //Try to parse normally
+      //Try to parse each individual statement normally
       SQLParserResult result;
       SQLParser::parse(stmt, &result);
       if (result.isValid()) {
         printf("Parsed successfully!\n");
         printf("Number of statements: %lu\n", result.size());
         for (auto i = 0u; i < result.size(); ++i) {
-          newQuery+=getInfo(result.getStatement(i));//Send new sql string into vector one by one
+          string temp = getInfo(result.getStatement(i));
+          if(temp=="NO"){//If it returns NO it means it should not be parsed by hyrise
+            newQuery+=getInfoString(stmt);
+          }else{
+            newQuery+=temp;//Send new sql string into vector one by one
+          }
         }
       }else{
         cout<<"The statement: "<<stmt<<" is being manually parsed.\n";
@@ -373,13 +441,11 @@ bool parseString(string query){//Maybe check every semicolon then go from there
         }
         newQuery+=getInfoString(stmt);//Send this new sql string into vector
       }
-
       end = query.find(';')+1;
       maxLen=query.size();
     }
-    cout<<newQuery<<endl;
-    return true;
   }
+  cout<<newQuery<<endl;//Print out the final new query
   return true;
 }
 
@@ -395,3 +461,9 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+/**
+ * Known issues:
+ * 1. Doubles/floating points seem to be broken again but hopefully its just the display. @Kurt
+ * 
+ */ 
