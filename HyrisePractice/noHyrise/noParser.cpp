@@ -2,6 +2,7 @@
 #include "hsql/util/sqlhelper.h"
 #include <iostream>
 #include <string.h>
+#include <string>
 #include <sstream>
 #include <stdlib.h>
 #include <time.h>
@@ -50,15 +51,27 @@ bool selectStatement(const SQLStatement* sql){
   return true;
 }
 
+bool getCreateInfo(CreateStatement* stmt){
+  printCreateStatementInfo(stmt, 0);
+  for(char* col_name : *stmt->viewColumns){
+    cout<<col_name<<endl;
+  } 
+  return true;
+}
+
+//START OF INSERT STUFF ----------------------------------------------------------------------------------------------------
+
 /**
  * insertInt function helps insertStatement function with integers
  * 
  * @param val the integer value in string form
- * @param direction left/right
- * @param insertLocation how far from the left/right
+ * @param colName the column name being inserted on
+ * 
  * @return the new value
  */ 
-string insertInt(string val, int direction, int insertLocation){
+string insertInt(string val, string colName){
+  int direction = 1;     //GET FROM SECRET DB USING COLNAME
+  int insertLocation = 1;//GET FROM SECRET DB USING COLNAME
   int len = val.length();
   string newVal = "";
     if (len >= insertLocation) {
@@ -86,12 +99,15 @@ string insertInt(string val, int direction, int insertLocation){
  * insertDec function helps insertStatement function with floating points
  * 
  * @param val the decimal value in string form
- * @param direction left/right
- * @param insertLocation how far from the left/right
+ * @param colName The column name being inserted on
+ *
  * @return the new value
  */ 
-string insertDec(double val, int direction, int insertLocation){
+string insertFloat(string sval, string colName){
+  int direction = 1;     //GET FROM SECRET DB USING COLNAME
+  int insertLocation = 1;//GET FROM SECRET DB USING COLNAME
   double ret = 0;
+  double val = stod(sval);
     if(direction){
         double leftPart = (int)val / (int)pow(10, insertLocation);
         ret += leftPart * pow(10, insertLocation + 1);
@@ -109,11 +125,13 @@ string insertDec(double val, int direction, int insertLocation){
  * insertString function helps insertStatement function with strings
  * 
  * @param val the string value in string form
- * @param direction left/right
- * @param insertLocation how far from the left/right
+ * @param colName the column name being inserted on
+ * 
  * @return the new value
  */ 
-string insertString(string val, int direction, int insertLocation){
+string insertString(string val, string colName){
+  int direction = 1;     //GET FROM SECRET DB USING COLNAME
+  int insertLocation = 1;//GET FROM SECRET DB USING COLNAME
   string newVal = "";
     int len = val.length();
     if (len >= insertLocation) {
@@ -138,73 +156,90 @@ string insertString(string val, int direction, int insertLocation){
 }
 
 /**
- * insertStatement function
+ * recreateInsert function recreates the insert sql string with updated values
  * 
- * @param sql the insert sql statement
- * @return the new insert statement
+ * @param newVals vector of strings of the new values
+ * @param colNames vector of string of the colNames
+ * @param tableN table name being inserted on
+ * 
+ * @return the new sql query
  */ 
-string insertStatement(const SQLStatement* sql){
-  string newSql;
-  int direction = 0; //Read from secret db (0 = left, 1 = right)
-  int insertLocation = 2; //Read from secret db
-  int type = 1; //Read from secret db (0 = integer, 1 = decimal, 2 = string)
-  
-  //long long num = 1;
-  //float dec = 1.0;
-  //string str = "insert here";
-  string val = "100";
-  if(type==0){
-    cout<<"Int: "<<insertInt(val, direction, insertLocation)<<endl;
-  }else if(type==1){
-    double test = 1000;
-    cout<<"Double: "<<insertDec(test, direction, insertLocation)<<endl;
-  }else if(type==2){
-    cout<<"String: "<<insertString(val, direction, insertLocation)<<endl;
+string recreateInsert(vector<string> newVals, vector<string> colNames, string tableN){
+  string cols = "(";
+  string vals = "(";
+  for(int i = 0; i<colNames.size(); i++){
+    if(i!=colNames.size()-1){
+      cols+=colNames[i]+", ";
+      vals+=newVals[i]+", ";
+    }else{
+      cols+=colNames[i]+")";
+      vals+=newVals[i]+")";
+    }
   }
-  return newSql;
+  string newQuery = "INSERT INTO "+tableN+cols+" VALUES"+vals+";";
+  return newQuery;
 }
 
-bool getCreateInfo(CreateStatement* stmt){
-  printCreateStatementInfo(stmt, 0);
-  for(char* col_name : *stmt->viewColumns){
-    cout<<col_name<<endl;
-  } 
-  return true;
-}
-
-bool getInsertInfo(InsertStatement* stmt){
+/**
+ * getInsertInfo function helps the getInfo function
+ * Finds the colNames, table name, and modifies values and sends them to the recreateInsert function 
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getInsertInfo(InsertStatement* stmt){
   //printInsertStatementInfo(insState, 0);
-  
+
+  float fvalue;
+  int ivalue;
+  string svalue;
+
   vector<string> colNames;//Vector of the column names
+  vector<int> colTypes;//Vector of the column types  
+  vector<string> valVec;//Vector of the values in string form
+
   for(char* col_name : *stmt->columns){//Get columns
     colNames.push_back(col_name);
-    cout<<col_name<<endl;
   } 
-  //getInfo(sql.getStatement(i))//Get column names, types and values
-  for(Expr* val : *stmt->values){
-    int ivalue;
-    float fvalue;
-    string svalue;
 
+  for(Expr* val : *stmt->values){//Get values, prepare them for insertion
     switch (val->type) {//Check type of value we are inserting into
       case kExprLiteralFloat://Float
         fvalue = val->fval;
-        cout<<fvalue;
+        colTypes.push_back(0);
+        valVec.push_back(to_string(fvalue));
         break;
       case kExprLiteralInt://Integer
         ivalue = val->ival;
-        cout<<ivalue<<endl;
+        colTypes.push_back(1);
+        valVec.push_back(to_string(ivalue));
         break;
       case kExprLiteralString://String
         svalue = val->name;
-        cout<<svalue;
+        colTypes.push_back(2);
+        valVec.push_back(svalue);
         break;
       default:
-        return false;
+        break;
+    }
+  }
+
+  vector<string> newValues;
+  for(int i=0; i<colNames.size(); i++){//Insert extra character into values
+    if(colTypes[i]==0){//Float
+      newValues.push_back(insertFloat(valVec[i], colNames[i]));
+    }else if(colTypes[i]==1){//Integer
+      newValues.push_back(insertInt(valVec[i], colNames[i]));
+    }else if(colTypes[i]==2){//String
+      newValues.push_back(insertString(valVec[i], colNames[i]));
     }
   } 
-  return true;
+  string tableN = stmt->tableName; //get table name
+  return recreateInsert(newValues, colNames, tableN);//Create new sql string to send back
 }
+//END OF INSERT STUFF ----------------------------------------------------------------------------------------------------
+
+
 /**
  * getInfo function
  * Returns the columns, types, and values if required
@@ -212,7 +247,7 @@ bool getInsertInfo(InsertStatement* stmt){
  * @param query the sql statement in question
  * @return Array of cols, types, values
  */
-bool getInfo(const SQLStatement* sql){
+string getInfo(const SQLStatement* sql){
       InsertStatement* insState;//The different statement types for grabbing more info
       CreateStatement* creState;
       SelectStatement* selState;
@@ -220,10 +255,8 @@ bool getInfo(const SQLStatement* sql){
       ExportStatement* expState;
       TransactionStatement* tranState;//The different statement types for grabbing more info
 
-      vector<string> col_names;
-      vector<string> data_vec;
       switch(sql->type()){
-        case(kStmtUpdate):
+        case(kStmtUpdate): //Update
           cout<<"UPDATE"<<endl;
           break;
         case(kStmtDrop): //DROP
@@ -235,10 +268,10 @@ bool getInfo(const SQLStatement* sql){
           creState = (CreateStatement*) sql;
           getCreateInfo(creState);
           break;
-        case(kStmtPrepare):
+        case(kStmtPrepare): //Prepare
           cout<<"PREPARE"<<endl;
           break;
-        case kStmtDelete:
+        case kStmtDelete: //Delete
           cout<<"DELETE"<<endl;
           break;
         case kStmtSelect: //Select
@@ -248,28 +281,27 @@ bool getInfo(const SQLStatement* sql){
         case kStmtInsert: //Insert
           cout<<"INSERT"<<endl;
           insState = (InsertStatement*) sql;
-          getInsertInfo(insState);
-          insertStatement(sql);
+          return getInsertInfo(insState);
           break;
-        case(kStmtExecute):
+        case(kStmtExecute): //Execute
           cout<<"EXECUTE"<<endl;
           break;
-        case(kStmtRename):
+        case(kStmtRename): //Rename
           cout<<"RENAME"<<endl;
           break;
-        case(kStmtAlter):
+        case(kStmtAlter): //Alter
           cout<<"ALTER"<<endl;
           break;
-        case(kStmtShow):
+        case(kStmtShow): //Show
           cout<<"SHOW"<<endl;
           break;
-        case(kStmtTransaction):
+        case(kStmtTransaction)://Transaction
           cout<<"TRANSACTION"<<endl;
           break;
         default:
           break;
       }
-    return true;
+    return "";
 }
 
 /**
@@ -283,16 +315,16 @@ bool parseString(string query){
   SQLParserResult result;
   SQLParser::parse(query, &result);
 
+  string newQuery; //THIS IS WHAT WE RETURN TO THE SHIM
+
   // check whether the parsing was successful
   if (result.isValid()) {
     printf("Parsed successfully!\n");
     printf("Number of statements: %lu\n", result.size());
     for (auto i = 0u; i < result.size(); ++i) {
-      // Print a statement summary.
-      //printStatementInfo(result.getStatement(i));
-      //int typ = result.getStatement(i)->type();
-      getInfo(result.getStatement(i));
+      newQuery+=getInfo(result.getStatement(i));//Send new sql string into vector one by one
     }
+    cout<<newQuery<<endl;
   }else {
     fprintf(stderr, "Given string is not a valid SQL query.\n");
     fprintf(stderr, "%s (L%d:%d)\n",
