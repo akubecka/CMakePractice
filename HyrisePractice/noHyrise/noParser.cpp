@@ -21,10 +21,10 @@ using namespace hsql;
  * @param sql the drop sql statement
  * @return the same drop statement
  */ 
-string dropTable(string sql){
-  cout<<sql;//Change to syslog
+bool dropTable(const SQLStatement* sql){
+  //cout<<sql;//Change to syslog
   //Remove stuff from secret dbs and hashes
-  return sql;
+  return true;
 }
 
 /**
@@ -33,10 +33,10 @@ string dropTable(string sql){
  * @param sql the create sql statement
  * @return the new create statement
  */ 
-string createTable(string sql){
+bool createTable(const SQLStatement* sql){
   string newSql;
   //call theos function to alter
-  return newSql;
+  return true;
 }
 
 /**
@@ -45,9 +45,9 @@ string createTable(string sql){
  * @param sql the select sql statement
  * @return the new select statement
  */ 
-string selectStatement(string sql){
+bool selectStatement(const SQLStatement* sql){
   string newSql;
-  return newSql;
+  return true;
 }
 
 /**
@@ -143,7 +143,7 @@ string insertString(string val, int direction, int insertLocation){
  * @param sql the insert sql statement
  * @return the new insert statement
  */ 
-string insertStatement(string sql){
+string insertStatement(const SQLStatement* sql){
   string newSql;
   int direction = 0; //Read from secret db (0 = left, 1 = right)
   int insertLocation = 2; //Read from secret db
@@ -162,6 +162,114 @@ string insertStatement(string sql){
     cout<<"String: "<<insertString(val, direction, insertLocation)<<endl;
   }
   return newSql;
+}
+
+bool getCreateInfo(CreateStatement* stmt){
+  printCreateStatementInfo(stmt, 0);
+  for(char* col_name : *stmt->viewColumns){
+    cout<<col_name<<endl;
+  } 
+  return true;
+}
+
+bool getInsertInfo(InsertStatement* stmt){
+  //printInsertStatementInfo(insState, 0);
+  
+  vector<string> colNames;//Vector of the column names
+  for(char* col_name : *stmt->columns){//Get columns
+    colNames.push_back(col_name);
+    cout<<col_name<<endl;
+  } 
+  //getInfo(sql.getStatement(i))//Get column names, types and values
+  for(Expr* val : *stmt->values){
+    int ivalue;
+    float fvalue;
+    string svalue;
+
+    switch (val->type) {//Check type of value we are inserting into
+      case kExprLiteralFloat://Float
+        fvalue = val->fval;
+        cout<<fvalue;
+        break;
+      case kExprLiteralInt://Integer
+        ivalue = val->ival;
+        cout<<ivalue<<endl;
+        break;
+      case kExprLiteralString://String
+        svalue = val->name;
+        cout<<svalue;
+        break;
+      default:
+        return false;
+    }
+  } 
+  return true;
+}
+/**
+ * getInfo function
+ * Returns the columns, types, and values if required
+ * 
+ * @param query the sql statement in question
+ * @return Array of cols, types, values
+ */
+bool getInfo(const SQLStatement* sql){
+      InsertStatement* insState;//The different statement types for grabbing more info
+      CreateStatement* creState;
+      SelectStatement* selState;
+      ImportStatement* impState;
+      ExportStatement* expState;
+      TransactionStatement* tranState;//The different statement types for grabbing more info
+
+      vector<string> col_names;
+      vector<string> data_vec;
+      switch(sql->type()){
+        case(kStmtUpdate):
+          cout<<"UPDATE"<<endl;
+          break;
+        case(kStmtDrop): //DROP
+          cout<<"DROP"<<endl;
+          dropTable(sql);
+          break;
+        case(kStmtCreate): //Create (Big problems here with datatypes)
+          cout<<"CREATE"<<endl;
+          creState = (CreateStatement*) sql;
+          getCreateInfo(creState);
+          break;
+        case(kStmtPrepare):
+          cout<<"PREPARE"<<endl;
+          break;
+        case kStmtDelete:
+          cout<<"DELETE"<<endl;
+          break;
+        case kStmtSelect: //Select
+          cout<<"SELECT"<<endl;
+          selectStatement(sql);
+          break;
+        case kStmtInsert: //Insert
+          cout<<"INSERT"<<endl;
+          insState = (InsertStatement*) sql;
+          getInsertInfo(insState);
+          insertStatement(sql);
+          break;
+        case(kStmtExecute):
+          cout<<"EXECUTE"<<endl;
+          break;
+        case(kStmtRename):
+          cout<<"RENAME"<<endl;
+          break;
+        case(kStmtAlter):
+          cout<<"ALTER"<<endl;
+          break;
+        case(kStmtShow):
+          cout<<"SHOW"<<endl;
+          break;
+        case(kStmtTransaction):
+          cout<<"TRANSACTION"<<endl;
+          break;
+        default:
+          break;
+      }
+    return true;
 }
 
 /**
@@ -183,74 +291,9 @@ bool parseString(string query){
       // Print a statement summary.
       //printStatementInfo(result.getStatement(i));
       //int typ = result.getStatement(i)->type();
-
-      InsertStatement* insState;//The different statement types for grabbing more info
-      CreateStatement* creState;
-      SelectStatement* selState;
-      ImportStatement* impState;
-      ExportStatement* expState;
-      TransactionStatement* tranState;//The different statement types for grabbing more info
-
-      vector<string> col_names;
-      vector<string> data_vec;
-      switch(result.getStatement(i)->type()){
-        case(kStmtUpdate):
-          cout<<"UPDATE"<<endl;
-          break;
-        case(kStmtDrop): //DROP
-          cout<<"DROP"<<endl;
-          dropTable(query);
-          break;
-        case(kStmtCreate): //Create (Big problems here with datatypes)
-          cout<<"CREATE"<<endl;
-          creState = (CreateStatement*) result.getStatement(i);
-          printCreateStatementInfo(creState, 0);
-          for(char* col_name : *creState->columns){
-            cout<<col_name<<endl;
-          } 
-          insertStatement(query);
-          createTable(query);
-          break;
-        case(kStmtPrepare):
-          cout<<"PREPARE"<<endl;
-          break;
-        case kStmtDelete:
-          cout<<"DELETE"<<endl;
-          break;
-        case kStmtSelect: //Select
-          cout<<"SELECT"<<endl;
-          selectStatement(query);
-          break;
-        case kStmtInsert: //Insert
-          cout<<"INSERT"<<endl;
-          insState = (InsertStatement*) result.getStatement(i);
-          printInsertStatementInfo(insState, 0);
-          for(char* col_name : *insState->columns){
-            cout<<col_name<<endl;
-          } 
-          insertStatement(query);
-          break;
-        case(kStmtExecute):
-          cout<<"EXECUTE"<<endl;
-          break;
-        case(kStmtRename):
-          cout<<"RENAME"<<endl;
-          break;
-        case(kStmtAlter):
-          cout<<"ALTER"<<endl;
-          break;
-        case(kStmtShow):
-          cout<<"SHOW"<<endl;
-          break;
-        case(kStmtTransaction):
-          cout<<"TRANSACTION"<<endl;
-          break;
-        default:
-          break;
-      }
+      getInfo(result.getStatement(i));
     }
-    return true;
-  } else {
+  }else {
     fprintf(stderr, "Given string is not a valid SQL query.\n");
     fprintf(stderr, "%s (L%d:%d)\n",
             result.errorMsg(),
