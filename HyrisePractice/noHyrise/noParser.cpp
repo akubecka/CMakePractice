@@ -59,7 +59,7 @@ bool getCreateInfo(CreateStatement* stmt){
 //START OF INSERT STUFF ----------------------------------------------------------------------------------------------------
 
 /**
- * insertInt function helps insertStatement function with integers
+ * insertInt function helps getInsertInfo function with integers
  * 
  * @param val the integer value in string form
  * @param colName the column name being inserted on
@@ -93,7 +93,7 @@ string insertInt(string val, string colName){
 }
 
 /**
- * insertDec function helps insertStatement function with floating points
+ * insertFloat function helps getInsertInfo function with floating points
  * 
  * @param val the decimal value in string form
  * @param colName The column name being inserted on
@@ -119,7 +119,7 @@ string insertFloat(string sval, string colName){
 }
 
 /**
- * insertString function helps insertStatement function with strings
+ * insertString function helps getInsertInfo function with strings
  * 
  * @param val the string value in string form
  * @param colName the column name being inserted on
@@ -234,72 +234,144 @@ string getInsertInfo(InsertStatement* stmt){
   string tableN = stmt->tableName; //get table name
   return recreateInsert(newValues, colNames, tableN);//Create new sql string to send back
 }
+
 //END OF INSERT STUFF ----------------------------------------------------------------------------------------------------
+
+//START OF SELECT STUFF --------------------------------------------------------------------------------------------------
+
+
+/**
+ * selectInt function helps getSelectInfo function with integers(column indices)
+ * 
+ * @param fieldVec vector of the different fields we are selecting from in string form
+ * @param sourceVec vector of the different sources we are selecting from(usually table name)
+ * 
+ * @return the new source/table name where the select data is stored without extra characters
+ */ 
+string selectInt(vector<string> fieldVec, vector<string> sourceVec){
+  string newVal = sourceVec[0];
+  return newVal+"_secret";
+}
+
+/**
+ * selectFloat function helps getSelectInfo function with floats(column indices?)
+ * 
+ * @param fieldVec vector of the different fields we are selecting from in string form
+ * @param sourceVec vector of the different sources we are selecting from(usually table name)
+ * 
+ * @return the new source/table name where the select data is stored without extra characters
+ */ 
+string selectFloat(vector<string> fieldVec, vector<string> sourceVec){
+  string newVal = sourceVec[0];
+  return newVal+"_secret";
+}
+
+/**
+ * selectString function helps getSelectInfo function with strings(column names)
+ * 
+ * @param fieldVec vector of the different fields we are selecting from in string form
+ * @param sourceVec vector of the different sources we are selecting from(usually table name)
+ * 
+ * @return the new source/table name where the select data is stored without extra characters
+ */ 
+string selectString(vector<string> fieldVec, vector<string> sourceVec){
+  string newVal = sourceVec[0];
+  return newVal+"_secret";
+}
+
+/**
+ * selectStar function helps getSelectInfo function with *(all)
+ * 
+ * @param fieldVec vector of the different fields we are selecting from in string form
+ * @param sourceVec vector of the different sources we are selecting from(usually table name)
+ * 
+ * @return the new source/table name where the select data is stored without extra characters
+ */ 
+string selectStar(vector<string> sourceVec){
+  string newVal = sourceVec[0];
+  return newVal+"_secret";
+}
+
+/**
+ * recreateSelect function recreates the select sql string with updated sources
+ * 
+ * @param fieldVec vector of strings of the fields
+ * @param sourceVec vector of string of the new sources
+ * 
+ * @return the new sql query
+ */ 
+string recreateSelect(vector<string> fieldVec, vector<string> sourceVec){
+  string fields = "";
+  string sources = "";
+  for(int i = 0; i<fieldVec.size(); i++){
+    if(i!=fieldVec.size()-1){
+      fields+=fieldVec[i]+", ";
+      sources+=sourceVec[i]+", ";
+    }else{
+      fields+=fieldVec[i];
+      sources+=sourceVec[i];
+    }
+  }
+  string newQuery = "SELECT "+fields+" FROM "+sources+";";
+  return newQuery;
+}
 
 string getSelectInfo(SelectStatement* stmt){
   vector<string> fieldVec;//Vector of the field names
   vector<string> sourceVec;//Vector of the source names
+  vector<int> colTypes;//Vector of the select types
 
-  for(Expr* val : *stmt->selectList){//Get values, prepare them for insertion
-    switch (val->type) {//Check type of value we are inserting into
+  float fvalue;
+  int ivalue;
+  string svalue;
+
+  if(stmt->fromTable!=nullptr){//Get the source of where we are selecting from
+    sourceVec.push_back(stmt->fromTable->name);
+  }
+  string tableN = sourceVec[0];//Temporary, I'm not sure why this wouldnt work yet
+
+  for(Expr* val : *stmt->selectList){//Get values, prepare them for selection
+    switch (val->type) {//Check type of value we are selecting from
       case kExprLiteralFloat://Float
         fvalue = val->fval;
         fieldVec.push_back(to_string(fvalue));
+        colTypes.push_back(0);
         break;
       case kExprLiteralInt://Integer
         ivalue = val->ival;
         fieldVec.push_back(to_string(ivalue));
+        colTypes.push_back(1);
         break;
       case kExprLiteralString://String
         svalue = val->name;
         fieldVec.push_back(svalue);
+        colTypes.push_back(2);
         break;
-      case kExprStar:
+      case kExprStar://All
         fieldVec.push_back("*");
-        break;
-      case kExprColumnRef:
-        inprint(expr->name, numIndent);
-        if(expr->table) {
-          inprint("Table:", numIndent+1);
-          inprint(expr->table, numIndent+2);
-        }
-        break;
-      case kExprFunctionRef:
-        inprint(expr->name, numIndent);
-        for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
-        break;
-      case kExprExtract:
-        inprint(expr->name, numIndent);
-        inprint(expr->datetimeField, numIndent + 1);
-        printExpression(expr->expr, numIndent + 1);
-        break;
-      case kExprCast:
-        inprint(expr->name, numIndent);
-        inprint(expr->columnType, numIndent + 1);
-        printExpression(expr->expr, numIndent + 1);
-        break;
-      case kExprOperator:
-        printOperatorExpression(expr, numIndent);
-        break;
-      case kExprSelect:
-        printSelectStatementInfo(expr->select, numIndent);
-        break;
-      case kExprParameter:
-        inprint(expr->ival, numIndent);
-        break;
-      case kExprArray:
-        for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
-        break;
-      case kExprArrayIndex:
-        printExpression(expr->expr, numIndent + 1);
-        inprint(expr->ival, numIndent);
+        colTypes.push_back(3);
         break;
       default:
           break;
       }
   }
+  vector<string> newSource;//Vector of new sources we want the user to select from(ONLY CHANGES TABLENAME RIGHT NOW)
+  for(int i=0; i<sourceVec.size(); i++){//Select relevant data, make new table where extra character is removed.
+    if(colTypes[i]==0){//Float(Not sure when this would be used)
+      newSource.push_back(selectFloat(fieldVec, sourceVec));
+    }else if(colTypes[i]==1){//Integer(Column Index)
+      newSource.push_back(selectInt(fieldVec, sourceVec));
+    }else if(colTypes[i]==2){//String(Column Name)
+      newSource.push_back(selectString(fieldVec, sourceVec));
+    }
+    else if(colTypes[i]==3){//*
+      newSource.push_back(selectStar(sourceVec));//Don't even need to send the * string
+    }
+  } 
+  string newTable = newSource[0];
+  return recreateSelect(fieldVec, newSource);//Create new sql string to send back
 }
-
+//END OF SELECT STUFF --------------------------------------------------------------------------------------------------
 /**
  * getInfo function
  * Returns the columns, types, and values if required
@@ -336,7 +408,6 @@ string getInfo(const SQLStatement* sql){
         case kStmtSelect: //Select
           cout<<"SELECT"<<endl;
           selState = (SelectStatement*) sql;
-          printSelectStatementInfo(selState, 0);
           return getSelectInfo(selState);
           //selectStatement(sql);
           break;
@@ -465,5 +536,11 @@ int main(int argc, char* argv[]) {
 /**
  * Known issues:
  * 1. Doubles/floating points seem to be broken again but hopefully its just the display. @Kurt
- * 
+ * 2. One thought: What if we just have a secret DB where we do not insert extra characters. 
+ *      -It would help some statements be faster like select
+ *      -BUT it is the complete opposite of what our project is for
+ * 3. SELECT only works with the simplest select statements(where field=*, colIndex, colName)
+ *      -I think this is fixable by adding in the extra cases in the sqlhelper.cpp file for printSelectStatementInfo() function
+ * 4. NEWSOURCE Vector in getSelectInfo needs to modify all the elements in sourceVec not just make a new tableName
+ * 5. Need to finish all the selectStar, etc to actually make the new table and sources but thats for when  DB is connected
  */ 
