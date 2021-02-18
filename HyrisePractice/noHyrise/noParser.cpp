@@ -306,9 +306,15 @@ string recreateSelect(vector<string> fieldVec, vector<string> sourceVec){
   for(int i = 0; i<fieldVec.size(); i++){
     if(i!=fieldVec.size()-1){
       fields+=fieldVec[i]+", ";
-      sources+=sourceVec[i]+", ";
     }else{
       fields+=fieldVec[i];
+    }
+  }
+  
+  for(int i = 0; i<sourceVec.size(); i++){
+    if(i!=sourceVec.size()-1){
+      sources+=sourceVec[i]+", ";
+    }else{
       sources+=sourceVec[i];
     }
   }
@@ -320,7 +326,7 @@ string getSelectInfo(SelectStatement* stmt){
   vector<string> fieldVec;//Vector of the field names
   vector<string> sourceVec;//Vector of the source names
   vector<int> colTypes;//Vector of the select types
-
+  printSelectStatementInfo(stmt, 0);
   float fvalue;
   int ivalue;
   string svalue;
@@ -329,7 +335,6 @@ string getSelectInfo(SelectStatement* stmt){
     sourceVec.push_back(stmt->fromTable->name);
   }
   string tableN = sourceVec[0];//Temporary, I'm not sure why this wouldnt work yet
-
   for(Expr* val : *stmt->selectList){//Get values, prepare them for selection
     switch (val->type) {//Check type of value we are selecting from
       case kExprLiteralFloat://Float
@@ -339,17 +344,25 @@ string getSelectInfo(SelectStatement* stmt){
         break;
       case kExprLiteralInt://Integer
         ivalue = val->ival;
+        cout<<ivalue<<endl;
         fieldVec.push_back(to_string(ivalue));
         colTypes.push_back(1);
         break;
       case kExprLiteralString://String
         svalue = val->name;
+        cout<<svalue<<endl;
         fieldVec.push_back(svalue);
         colTypes.push_back(2);
         break;
       case kExprStar://All
         fieldVec.push_back("*");
         colTypes.push_back(3);
+        break;
+      case kExprColumnRef://Column Reference(AKA column name)
+        svalue = val->name;
+        cout<<svalue<<endl;
+        fieldVec.push_back(svalue);
+        colTypes.push_back(2);
         break;
       default:
           break;
