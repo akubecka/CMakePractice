@@ -17,48 +17,6 @@ using namespace std;
 using namespace hsql;
 
 /**
- * dropTable function
- * 
- * @param sql the drop sql statement
- * @return the same drop statement
- */ 
-bool dropTable(const SQLStatement* sql){
-  //cout<<sql;//Change to syslog
-  //Remove stuff from secret dbs and hashes
-  return true;
-}
-
-/**
- * createTable function
- * 
- * @param sql the create sql statement
- * @return the new create statement
- */ 
-bool createTable(const SQLStatement* sql){
-  string newSql;
-  //call theos function to alter
-  return true;
-}
-
-/**
- * selectStatement function
- * 
- * @param sql the select sql statement
- * @return the new select statement
- */ 
-bool selectStatement(const SQLStatement* sql){
-  string newSql;
-  return true;
-}
-
-bool getCreateInfo(CreateStatement* stmt){
-  printCreateStatementInfo(stmt, 0);
-  return true;
-}
-
-//START OF INSERT STUFF ----------------------------------------------------------------------------------------------------
-
-/**
  * insertInt function helps getInsertInfo function with integers
  * 
  * @param val the integer value in string form
@@ -322,6 +280,13 @@ string recreateSelect(vector<string> fieldVec, vector<string> sourceVec){
   return newQuery;
 }
 
+/**
+ * getSelectInfo function helps the getInfo function
+ * Finds the fields and sources, modifies values and sends them to the recreateSelect function 
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
 string getSelectInfo(SelectStatement* stmt){
   vector<string> fieldVec;//Vector of the field names
   vector<string> sourceVec;//Vector of the source names
@@ -385,6 +350,7 @@ string getSelectInfo(SelectStatement* stmt){
   return recreateSelect(fieldVec, newSource);//Create new sql string to send back
 }
 //END OF SELECT STUFF --------------------------------------------------------------------------------------------------
+
 /**
  * getInfo function
  * Returns the columns, types, and values if required
@@ -406,7 +372,7 @@ string getInfo(const SQLStatement* sql){
           break;
         case(kStmtDrop): //DROP
           cout<<"DROP"<<endl;
-          dropTable(sql);
+          //dropTable(sql);
           break;
         case(kStmtCreate): //Create (Big problems here with datatypes)
           cout<<"CREATE"<<endl;
@@ -450,6 +416,81 @@ string getInfo(const SQLStatement* sql){
     return "";
 }
 
+//START OF CREATE STUFF ----------------------------------------------------------------------------------------------------
+
+/**
+ * recreateCreate function recreates the create sql string with updated datatypes and overflow columns
+ * 
+ * @param leftSide string of the "CREATE TABLE ____(" statement
+ * @param colNames vector of strings of the colNames
+ * @param dataTypes vector of string of the col datatypes
+ * 
+ * @return the new sql query
+ */ 
+string recreateCreate(string leftSide, vector<string> colNames, vector<string> dataTypes){
+  string rightSide = "";
+  for(int i = 0; i<colNames.size(); i++){
+    if(i!=colNames.size()-1){
+      rightSide+=colNames[i]+" "+dataTypes[i]+ ", ";
+    }else{
+      rightSide+=colNames[i]+" "+dataTypes[i]+");";
+    }
+  }
+  return leftSide+rightSide;
+}
+
+/**
+ * getCreateInfo function helps the getInfoString function
+ * Finds the colNames and dataTypes and modifies dataTypes and sends them to the recreateCreate function 
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getCreateInfo(string stmt){
+  vector<string> colNames;
+  vector<string> dataTypes;
+  bool nameB = true; //Check if reading colname
+  bool typeB = false; //Check if reading coltype
+  string name = "";
+  string type = "";
+
+  int maxLen = stmt.length();
+  int end = stmt.find('(');
+  string newStmt = stmt.substr(0,end+1);
+  string colData = stmt.substr(end, maxLen);
+  for(int i=1; i<colData.length(); i++){
+    if(colData[i]==' '){
+      colNames.push_back(name);
+      name="";
+      typeB=true;
+      nameB=false;
+    }else if(colData[i]==','){
+      dataTypes.push_back(type);
+      type="";
+      typeB=false;
+      nameB=true;
+    }else if(colData[i]==')'){
+      dataTypes.push_back(type);
+      type="";
+      typeB=false;
+      nameB=true;
+      break;
+    }else{
+      if(typeB){
+        type+=colData[i];
+      }else{
+        name+=colData[i];
+      }
+    }
+  }
+
+  //convertDatatypes(dataTypes) //Send to function to increase the scale by 1 of each data type
+  return recreateCreate(newStmt, colNames, dataTypes);//Create and return new sql string
+}
+
+//END OF CREATE STUFF ----------------------------------------------------------------------------------------------------
+
+
 /**
  * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
  * Returns the columns, types, and values if required
@@ -460,12 +501,13 @@ string getInfo(const SQLStatement* sql){
 string getInfoString(string query){
   string newQuery = query;
   if(query.substr(0, 6)=="CREATE"){
-    cout<<"CREATE"<<endl;
+    return getCreateInfo(query);
   }else{
     return "";
   }
   return newQuery;
 }
+
 /**
  * parseString function
  * 
@@ -485,6 +527,7 @@ bool parseString(string query){//Maybe check every semicolon then go from there
     printf("Parsed successfully!\n");
     printf("Number of statements: %lu\n", result.size());
     for (auto i = 0u; i < result.size(); ++i) {
+      printStatementInfo(result.getStatement(i));
       newQuery+=getInfo(result.getStatement(i));//Send new sql string into vector one by one
     }
   }else {//The parser does not recognize something so we need to go one by one
@@ -556,4 +599,5 @@ int main(int argc, char* argv[]) {
  *      -I think this is fixable by adding in the extra cases in the sqlhelper.cpp file for printSelectStatementInfo() function
  * 4. NEWSOURCE Vector in getSelectInfo needs to modify all the elements in sourceVec not just make a new tableName
  * 5. Need to finish all the selectStar, etc to actually make the new table and sources but thats for when  DB is connected
+ * 6. For CREATE still need to increment the data types with function in the shared file
  */ 
