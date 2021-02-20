@@ -430,6 +430,7 @@ string getInfo(const SQLStatement* sql){
 string recreateCreate(string leftSide, vector<string> colNames, vector<string> dataTypes){
   string rightSide = "";
   for(int i = 0; i<colNames.size(); i++){
+    cout<<dataTypes[i]<<endl;
     if(i!=colNames.size()-1){
       rightSide+=colNames[i]+" "+dataTypes[i]+ ", ";
     }else{
@@ -439,6 +440,26 @@ string recreateCreate(string leftSide, vector<string> colNames, vector<string> d
   return leftSide+rightSide;
 }
 
+/**
+ * convertDatatypes function converts the datatypes in create table statement to next highest
+ * 
+ * @param dTs vector of datatypes from sql statement
+ * 
+ * @return vector of new datatypes
+ */ 
+vector<string> convertDatatypes(vector<string> dTs){
+  vector<string> newVec;
+  for(string dt : dTs){
+    if(dt=="smallint"){
+      newVec.push_back("int");
+    }else if(dt=="int"){
+      newVec.push_back("bigint");
+    }else if(dt=="bigint"){
+      newVec.push_back("numeric");
+    }
+  }
+  return newVec;
+}
 /**
  * getCreateInfo function helps the getInfoString function
  * Finds the colNames and dataTypes and modifies dataTypes and sends them to the recreateCreate function 
@@ -483,13 +504,11 @@ string getCreateInfo(string stmt){
       }
     }
   }
-
-  //convertDatatypes(dataTypes) //Send to function to increase the scale by 1 of each data type
-  return recreateCreate(newStmt, colNames, dataTypes);//Create and return new sql string
+  //Send to function to increase the scale by 1 of each data type
+  return recreateCreate(newStmt, colNames, convertDatatypes(dataTypes));//Create and return new sql string
 }
 
 //END OF CREATE STUFF ----------------------------------------------------------------------------------------------------
-
 
 /**
  * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
@@ -566,7 +585,7 @@ bool parseString(string query){//Maybe check every semicolon then go from there
           cout<<"ERROR: "<<stmt<<" is not a valid statement."<<endl;
           return false;
         }
-        newQuery+=getInfoString(stmt);//Send this new sql string into vector
+        newQuery+=temp;//Send this new sql string into vector
       }
       end = query.find(';')+1;
       maxLen=query.size();
@@ -599,5 +618,6 @@ int main(int argc, char* argv[]) {
  *      -I think this is fixable by adding in the extra cases in the sqlhelper.cpp file for printSelectStatementInfo() function
  * 4. NEWSOURCE Vector in getSelectInfo needs to modify all the elements in sourceVec not just make a new tableName
  * 5. Need to finish all the selectStar, etc to actually make the new table and sources but thats for when  DB is connected
- * 6. For CREATE still need to increment the data types with function in the shared file
+ * 6. For CREATE still need to increment all the data types
+ * 7. 
  */ 
