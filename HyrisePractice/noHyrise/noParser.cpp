@@ -369,6 +369,7 @@ string getInfo(const SQLStatement* sql){
       switch(sql->type()){
         case(kStmtUpdate): //Update
           cout<<"UPDATE"<<endl;
+          return "NO";
           break;
         case(kStmtDrop): //DROP
           cout<<"DROP"<<endl;
@@ -383,6 +384,7 @@ string getInfo(const SQLStatement* sql){
           break;
         case kStmtDelete: //Delete
           cout<<"DELETE"<<endl;
+          return "NO";
           break;
         case kStmtSelect: //Select
           cout<<"SELECT"<<endl;
@@ -402,6 +404,7 @@ string getInfo(const SQLStatement* sql){
           break;
         case(kStmtAlter): //Alter
           cout<<"ALTER"<<endl;
+          return "NO";
           break;
         case(kStmtShow): //Show
           cout<<"SHOW"<<endl;
@@ -410,6 +413,8 @@ string getInfo(const SQLStatement* sql){
           cout<<"TRANSACTION"<<endl;
           break;
         default:
+          cout<<"NO TYPE FOUND"<<endl;
+          return "NO";
           break;
       }
     return "";
@@ -508,6 +513,7 @@ string getCreateInfo(string stmt){
 }
 
 //END OF CREATE STUFF ----------------------------------------------------------------------------------------------------
+
 //START OF DROP STUFF ----------------------------------------------------------------------------------------------------
 
 /**
@@ -558,7 +564,100 @@ string getDropInfo(string stmt){
   }
 }
 //END OF DROP STUFF ----------------------------------------------------------------------------------------------------
+/**
+ * recreateDeleteTable function recreates the delete table sql string with updated data if necesary(not yet)
+ * 
+ * @param tableN name of table being deleted from
+ * 
+ * @return the new sql query
+ */ 
+string recreateDeleteTable(string tableN){
+  return "DELETE FROM "+tableN+";";
+}
 
+/**
+ * getDeleteInfo function helps the getInfoString function
+ * Finds the delete info, deletes and rehashes using temp tables and sends them to the recreateDelete functions
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getDeleteInfo(string stmt){
+  int maxLen = stmt.size();
+  int sz;
+  if(stmt.substr(7, 4)=="FROM"){
+    cout<<"DELETE FROM"<<endl;
+    sz = maxLen-13;
+    string tableN = stmt.substr(12,sz);//The table name we are dropping
+    //HERE WE CHECK OUR SECRET DB FOR DATA WITH THE TABLE NAME AND DELETE IT
+    return recreateDeleteTable(tableN);
+  }else{
+    return "delete error";
+  }
+}
+
+/**
+ * getTruncateInfo function helps the getInfoString function
+ * Finds the table name to delete from our data
+ * 
+ * @param stmt the sql statement in question
+ * @return same sql statement
+ */
+string getTruncateInfo(string stmt){
+  int maxLen = stmt.size();
+  int sz;
+  cout<<"TRUNCATE"<<endl;
+  sz = maxLen-10;
+  string tableN = stmt.substr(9,sz);//The table name we are dropping
+  cout<<tableN<<endl;
+  //HERE WE CHECK OUR SECRET DB FOR DATA WITH THE TABLE NAME AND DELETE IT
+  return stmt;
+}
+
+/**
+ * recreateDeleteTable function recreates the delete table sql string with updated data if necesary(not yet)
+ * 
+ * @param tableN name of table being deleted from
+ * 
+ * @return the new sql query
+ */ 
+string recreateUpdateTable(string tableN, string setCol, string setVal, string whereCol, string whereVal){
+  return "UPDATE "+tableN+" SET "+setCol+"="+setVal+" WHERE "+ whereCol+"="+whereVal+";";
+}
+
+/**
+ * getUpdateInfo function helps the getInfoString function
+ * Finds the delete info, deletes and rehashes using temp tables and sends them to the recreateDelete functions
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getUpdateInfo(string stmt){
+  int maxLen = stmt.size();
+  int set = stmt.find("SET")+4;
+  int where = stmt.find("WHERE");
+  string tableN = stmt.substr(7, set-12);
+  string setCol;
+  string setVal;
+  string whereCol;
+  string whereVal;
+  int setEq = stmt.find("=");
+  string setStr;
+  string whereStr;
+  if(where>=0){
+    setStr = stmt.substr(set, where-set-1);
+    whereStr = stmt.substr(where+6, maxLen-where-7);
+    int whereEq = whereStr.find("=");
+    whereCol = whereStr.substr(0,whereEq);
+    whereVal = whereStr.substr(whereEq+1, whereStr.size()-whereEq);
+  }else{
+    setStr = stmt.substr(set, maxLen-set-1);
+  }
+  setEq = setStr.find("=");
+  setCol = setStr.substr(0, setEq);
+  setVal = setStr.substr(setEq+1, setStr.size()-setEq);
+  return recreateUpdateTable(tableN, setCol, setVal, whereCol, whereVal);
+}
 /**
  * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
  * Returns the columns, types, and values if required
@@ -572,6 +671,14 @@ string getInfoString(string query){
     return getCreateInfo(query);
   }else if(query.substr(0,4)=="DROP"){
     return getDropInfo(query); 
+  }else if(query.substr(0,6)=="DELETE"){
+    return getDeleteInfo(query);
+  }else if(query.substr(0,6)=="UPDATE"){
+    return getUpdateInfo(query);
+  }else if(query.substr(0,8)=="TRUNCATE"){
+    return getTruncateInfo(query);
+  }else if(query.substr(0,5)=="ALTER"){
+    return getTruncateInfo(query);
   }else{
     return "";
   }
