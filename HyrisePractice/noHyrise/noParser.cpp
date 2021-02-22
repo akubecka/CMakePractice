@@ -615,13 +615,18 @@ string getTruncateInfo(string stmt){
 }
 
 /**
- * recreateDeleteTable function recreates the delete table sql string with updated data if necesary(not yet)
+ * recreateUpdateTable function recreates the update sql string with updated data if necesary(not yet)
  * 
- * @param tableN name of table being deleted from
+ * @param tableN name of table being updated
+ * @param setCol name of column being set
+ * @param setVal value being set in col
+ * @param whereCol name of column where...
+ * @param whereVal value of column where...
  * 
  * @return the new sql query
  */ 
 string recreateUpdateTable(string tableN, string setCol, string setVal, string whereCol, string whereVal){
+  //Gotta do all the select statements to get the real values
   return "UPDATE "+tableN+" SET "+setCol+"="+setVal+" WHERE "+ whereCol+"="+whereVal+";";
 }
 
@@ -658,6 +663,52 @@ string getUpdateInfo(string stmt){
   setVal = setStr.substr(setEq+1, setStr.size()-setEq);
   return recreateUpdateTable(tableN, setCol, setVal, whereCol, whereVal);
 }
+
+
+/**
+ * recreateAlterTable function recreates the alter sql string with updated datatype
+ * 
+ * @param tableN name of table being deleted from
+ * @param colN name of column being added
+ * @param colType type of column being added
+ * 
+ * @return the new sql query
+ */ 
+string recreateAlterTable(string tableN, string colN, string colType){
+  return "ALTER TABLE "+tableN+ " ADD "+colN+" "+ colType+";";
+}
+
+/**
+ * getAlterInfo function helps the getInfoString function
+ * Finds the tableName, columnName, and columnType of ADD alter statements
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getAlterInfo(string stmt){
+  string tableN;
+  string colN;
+  string colType;
+  vector<string> dataType;
+  int maxLen = stmt.size();
+  int add = stmt.find("ADD");
+  tableN = stmt.substr(12, maxLen-add-8);
+  bool first = false;
+  for(int i=add+4; i<maxLen-1; i++){
+    if(stmt[i]==' '){
+      first=true;
+      continue;
+    }
+    if(!first){
+      colN+=stmt[i];
+    }else{
+      colType+=stmt[i];
+    }
+  }
+  dataType.push_back(colType);
+  return recreateAlterTable(tableN, colN, convertDatatypes(dataType)[0]);
+}
+
 /**
  * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
  * Returns the columns, types, and values if required
@@ -678,7 +729,7 @@ string getInfoString(string query){
   }else if(query.substr(0,8)=="TRUNCATE"){
     return getTruncateInfo(query);
   }else if(query.substr(0,5)=="ALTER"){
-    return getTruncateInfo(query);
+    return getAlterInfo(query);
   }else{
     return "";
   }
@@ -778,4 +829,5 @@ int main(int argc, char* argv[]) {
  * 5. Need to finish all the selectStar, etc to actually make the new table and sources but thats for when  DB is connected
  * 6. For CREATE still need to increment all the data types
  * 7. For DROPS I only do the simplest statement(DROP TABLE xxx)
+ * 8. For UPDATE I need to check if there's no WHERE clause when i recreate. Also need to do SELECTs to get the real values
  */ 
