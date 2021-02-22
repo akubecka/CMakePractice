@@ -666,7 +666,7 @@ string getUpdateInfo(string stmt){
 
 
 /**
- * recreateAlterTable function recreates the alter sql string with updated datatype
+ * recreateAlterAddTable function recreates the alter add sql string with updated datatype
  * 
  * @param tableN name of table being deleted from
  * @param colN name of column being added
@@ -674,8 +674,22 @@ string getUpdateInfo(string stmt){
  * 
  * @return the new sql query
  */ 
-string recreateAlterTable(string tableN, string colN, string colType){
+string recreateAlterAddTable(string tableN, string colN, string colType){
+  //Add the new table into secret data
   return "ALTER TABLE "+tableN+ " ADD "+colN+" "+ colType+";";
+}
+
+/**
+ * recreateAlterDropTable function recreates the alter add sql string with updated datatype
+ * 
+ * @param tableN name of table being deleted from
+ * @param colN name of column being added
+ * 
+ * @return the new sql query
+ */ 
+string recreateAlterDropTable(string tableN, string colN){
+  //Delete the dropped column from secret data
+  return "ALTER TABLE "+tableN+ " DROP COLUMN "+colN+";";
 }
 
 /**
@@ -692,21 +706,29 @@ string getAlterInfo(string stmt){
   vector<string> dataType;
   int maxLen = stmt.size();
   int add = stmt.find("ADD");
-  tableN = stmt.substr(12, maxLen-add-8);
-  bool first = false;
-  for(int i=add+4; i<maxLen-1; i++){
-    if(stmt[i]==' '){
-      first=true;
-      continue;
+  int drop = stmt.find("DROP");
+  if(add>=0){
+    tableN = stmt.substr(12, maxLen-add-8);
+    bool first = false;
+    for(int i=add+4; i<maxLen-1; i++){
+      if(stmt[i]==' '){
+        first=true;
+        continue;
+      }
+      if(!first){
+        colN+=stmt[i];
+      }else{
+        colType+=stmt[i];
+      }
     }
-    if(!first){
-      colN+=stmt[i];
-    }else{
-      colType+=stmt[i];
-    }
+    dataType.push_back(colType);
+    return recreateAlterAddTable(tableN, colN, convertDatatypes(dataType)[0]);
+  }else{
+    tableN = stmt.substr(12, maxLen-drop-12);
+    colN = stmt.substr(drop+12, maxLen-drop-13);
+    cout<<colN<<endl;
+    return recreateAlterDropTable(tableN, colN);
   }
-  dataType.push_back(colType);
-  return recreateAlterTable(tableN, colN, convertDatatypes(dataType)[0]);
 }
 
 /**
@@ -830,4 +852,5 @@ int main(int argc, char* argv[]) {
  * 6. For CREATE still need to increment all the data types
  * 7. For DROPS I only do the simplest statement(DROP TABLE xxx)
  * 8. For UPDATE I need to check if there's no WHERE clause when i recreate. Also need to do SELECTs to get the real values
+ * 9. For ALTER I did ADD but need to do DROP too
  */ 
