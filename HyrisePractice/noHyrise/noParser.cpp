@@ -852,5 +852,4 @@ int main(int argc, char* argv[]) {
  * 6. For CREATE still need to increment all the data types
  * 7. For DROPS I only do the simplest statement(DROP TABLE xxx)
  * 8. For UPDATE I need to check if there's no WHERE clause when i recreate. Also need to do SELECTs to get the real values
- * 9. For ALTER I did ADD but need to do DROP too
  */ 
