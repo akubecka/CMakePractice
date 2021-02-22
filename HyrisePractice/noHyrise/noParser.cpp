@@ -372,7 +372,7 @@ string getInfo(const SQLStatement* sql){
           break;
         case(kStmtDrop): //DROP
           cout<<"DROP"<<endl;
-          //dropTable(sql);
+          return "NO";
           break;
         case(kStmtCreate): //Create (Big problems here with datatypes)
           cout<<"CREATE"<<endl;
@@ -388,7 +388,6 @@ string getInfo(const SQLStatement* sql){
           cout<<"SELECT"<<endl;
           selState = (SelectStatement*) sql;
           return getSelectInfo(selState);
-          //selectStatement(sql);
           break;
         case kStmtInsert: //Insert
           cout<<"INSERT"<<endl;
@@ -509,6 +508,56 @@ string getCreateInfo(string stmt){
 }
 
 //END OF CREATE STUFF ----------------------------------------------------------------------------------------------------
+//START OF DROP STUFF ----------------------------------------------------------------------------------------------------
+
+/**
+ * recreateDropTable function recreates the drop table sql string with updated data if necesary(not yet)
+ * 
+ * @param tableN name of table being dropped
+ * 
+ * @return the new sql query
+ */ 
+string recreateDropTable(string tableN){
+  return "DROP TABLE "+tableN+";";
+}
+/**
+ * recreateDropDatabase function recreates the drop database sql string with updated data if necesary(not yet)
+ * 
+ * @param dbN name of database being dropped
+ * 
+ * @return the new sql query
+ */ 
+string recreateDropDatabase(string dbN){
+  return "DROP DATABASE "+dbN+";";
+}
+
+/**
+ * getDropInfo function helps the getInfoString function
+ * Finds the table name or database name, removes them from our data, and sends them to the recreateDropTable or Database function 
+ * 
+ * @param stmt the sql statement in question
+ * @return new sql statement
+ */
+string getDropInfo(string stmt){
+  int maxLen = stmt.size();
+  int sz;
+  if(stmt.substr(5, 5)=="TABLE"){
+    cout<<"DROP TABLE"<<endl;
+    sz = maxLen-12;
+    string tableN = stmt.substr(11,sz);//The table name we are dropping
+    //HERE WE CHECK OUR SECRET DB FOR DATA WITH THE TABLE NAME AND DELETE IT
+    return recreateDropTable(tableN);
+  }else if(stmt.substr(5, 8)=="DATABASE"){
+    cout<<"DROP DATABASE"<<endl;
+    sz = maxLen-15;
+    string dbN = stmt.substr(14,sz);//The table name we are dropping
+    //HERE WE CHECK OUR SECRET DB FOR DATA WITH THE TABLE NAME AND DELETE IT
+    return recreateDropDatabase(dbN);
+  }else{
+    return "drop error";
+  }
+}
+//END OF DROP STUFF ----------------------------------------------------------------------------------------------------
 
 /**
  * getInfoString function is the same as getInfo but parses by string instead of using the hyrise parser
@@ -521,6 +570,8 @@ string getInfoString(string query){
   string newQuery = query;
   if(query.substr(0, 6)=="CREATE"){
     return getCreateInfo(query);
+  }else if(query.substr(0,4)=="DROP"){
+    return getDropInfo(query); 
   }else{
     return "";
   }
@@ -619,5 +670,5 @@ int main(int argc, char* argv[]) {
  * 4. NEWSOURCE Vector in getSelectInfo needs to modify all the elements in sourceVec not just make a new tableName
  * 5. Need to finish all the selectStar, etc to actually make the new table and sources but thats for when  DB is connected
  * 6. For CREATE still need to increment all the data types
- * 7. 
+ * 7. For DROPS I only do the simplest statement(DROP TABLE xxx)
  */ 
