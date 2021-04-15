@@ -9,10 +9,14 @@
 /mnt/c/Users/kubec/Documents/CMakePractice/CPPRest/main.cc
 cpprest/http_listener.h
 -
+cpprest/json.h
+-
 iostream
 -
-rapidjson/writer.h
+map
 -
-rapidjson/stringbuffer.h
+set
+-
+string
 -
 
